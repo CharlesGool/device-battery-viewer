@@ -57,14 +57,16 @@ class Panel:
         tk.Label(head, text="设备电量", bg=BG, fg=FG, font=("Microsoft YaHei UI", 13, "bold")).pack(side="left")
         self.btn_refresh = ttk.Button(head, text="刷新", command=app.poller.refresh_now, width=8)
         self.btn_refresh.pack(side="right")
+        ttk.Button(head, text="插件…", command=app.show_plugins, width=8).pack(side="right", padx=6)
 
         self.cards = tk.Frame(self.win, bg=BG)
         self.cards.pack(fill="both", expand=True, padx=14)
 
-        self.plugins_label = tk.Label(self.win, bg=BG, fg=SUB, justify="left", anchor="w",
+        # 插件概况, 点一下打开插件管理
+        self.plugins_label = tk.Label(self.win, bg=BG, fg=SUB, anchor="w", cursor="hand2",
                                       font=("Microsoft YaHei UI", 9))
         self.plugins_label.pack(fill="x", padx=14, pady=(6, 0))
-        self.plugins_label.bind("<Configure>", lambda e: self.plugins_label.configure(wraplength=max(e.width - 4, 100)))
+        self.plugins_label.bind("<Button-1>", lambda e: app.show_plugins())
 
         foot = tk.Frame(self.win, bg=BG)
         foot.pack(fill="x", padx=14, pady=(6, 12))
@@ -104,21 +106,21 @@ class Panel:
         for w in self.cards.winfo_children():
             w.destroy()
         if not devices:
-            tk.Label(self.cards, text="还没发现设备\n\n罗技接收器插好、鼠标动一下;蓝牙设备先在系统里连上",
+            tk.Label(self.cards, text="还没发现设备\n\n罗技接收器插好、鼠标动一下;蓝牙设备先在系统里连上\n"
+                                      "其他设备可以在「插件…」里添加对应的插件",
                      bg=BG, fg=SUB, font=("Microsoft YaHei UI", 10), justify="center").pack(pady=30)
         hidden = set(self.app.cfg["hidden_devices"])
         for d in devices:
             self._card(d, d.id not in hidden)
 
-        lines = []
-        for p in plugins:
-            if p.disabled:
-                lines.append(f"{p.name}: 已停用")
-            elif p.error:
-                lines.append(f"{p.name}: 出错 - {p.error.strip().splitlines()[-1]}")
-            else:
-                lines.append(f"{p.name}: {p.device_count} 台, {p.last_scan_ms} ms")
-        self.plugins_label.configure(text="插件  " + "  ·  ".join(lines))
+        enabled = [p for p in plugins if not p.disabled]
+        failed = [p for p in enabled if p.error]
+        text = f"已启用 {len(enabled)} 个插件"
+        if len(enabled) < len(plugins):
+            text += f", 停用 {len(plugins) - len(enabled)} 个"
+        if failed:
+            text += f", {len(failed)} 个出错({'、'.join(p.name for p in failed)})"
+        self.plugins_label.configure(text=text + "  ·  管理插件 ›", fg="#d93025" if failed else SUB)
 
     def _card(self, d, shown_in_tray: bool) -> None:
         card = tk.Frame(self.cards, bg=CARD, highlightthickness=1, highlightbackground=TRACK)

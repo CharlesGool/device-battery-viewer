@@ -107,15 +107,16 @@ class App:
     def __init__(self, cfg: dict):
         import tkinter as tk
         from ui.panel import Panel
+        from ui.plugins_window import PluginWindow
         from ui.tray import Tray
 
         self.cfg = cfg
-        self.plugins = load_plugins(cfg["disabled_plugins"])
-        self.poller = Poller(self.plugins, cfg["interval"], self._on_change)
+        self.poller = Poller(load_plugins(cfg["disabled_plugins"]), cfg["interval"], self._on_change)
         self.q: queue.Queue[str] = queue.Queue()
         self.root = tk.Tk()
         self.root.withdraw()
         self.panel = Panel(self.root, self)
+        self.plugin_window = PluginWindow(self.root, self)
         self.tray = Tray(self._tray_items, self._tray_menu, lambda key: self.q.put("show"))
         self._tray_thread = threading.Thread(target=self._tray_main, name="tray", daemon=True)
 
@@ -142,6 +143,20 @@ class App:
         self.cfg["hidden_devices"] = ids
         config.save(self.cfg)
         self.tray.post_update()
+
+    # ---- 插件(主线程里调用) ----
+    def show_plugins(self) -> None:
+        self.plugin_window.show()
+
+    def reload_plugins(self) -> None:
+        """重新扫描插件目录并加载, 添加/修改/移除插件后立即生效。"""
+        self.poller.set_plugins(load_plugins(self.cfg["disabled_plugins"]))
+
+    def set_plugin_enabled(self, plugin_id: str, on: bool) -> None:
+        ids = [i for i in self.cfg["disabled_plugins"] if i != plugin_id] + ([] if on else [plugin_id])
+        self.cfg["disabled_plugins"] = ids
+        config.save(self.cfg)
+        self.reload_plugins()
 
     # ---- 托盘回调(托盘线程里调用) ----
     def _tray_items(self):
@@ -176,6 +191,7 @@ class App:
         menu += [
             MenuItem("打开面板", lambda: self.q.put("show")),
             MenuItem("立即刷新", self.poller.refresh_now),
+            MenuItem("插件管理…", lambda: self.q.put("plugins")),
             MenuItem("开机自启", lambda: set_autostart(not self.autostart_enabled()), checked=self.autostart_enabled()),
             MenuItem(),
             MenuItem("退出", lambda: self.q.put("quit")),
@@ -193,8 +209,11 @@ class App:
                 cmd = self.q.get_nowait()
                 if cmd == "show":
                     self.panel.show()
+                elif cmd == "plugins":
+                    self.plugin_window.show()
                 elif cmd == "render":
                     self.panel.render()
+                    self.plugin_window.render()
                 elif cmd == "quit":
                     self._quit()
                     return
