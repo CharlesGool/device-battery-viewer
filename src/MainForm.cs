@@ -228,11 +228,10 @@ namespace BatteryViewer
     {
         private readonly AppController _app;
         private readonly Label _kind, _name, _level, _detail;
-        private readonly ProgressBar _bar;
+        private readonly LevelBar _bar;
         private readonly CheckBox _tray;
         private DeviceState _d;
-        private int? _shownLevel;
-        private bool _binding, _barSet;
+        private bool _binding;
 
         public DeviceRow(AppController app)
         {
@@ -260,7 +259,7 @@ namespace BatteryViewer
             t.Controls.Add(_name, 1, 0);
             t.Controls.Add(_level, 2, 0);
 
-            _bar = new ProgressBar { Dock = DockStyle.Fill, Maximum = 100, Margin = Ui.Pd(0, 2, 0, 2) };
+            _bar = new LevelBar { Dock = DockStyle.Fill, Margin = Ui.Pd(0, 3, 0, 3) };
             t.Controls.Add(_bar, 0, 1);
             t.SetColumnSpan(_bar, 3);
 
@@ -281,9 +280,9 @@ namespace BatteryViewer
             {
                 Set(_kind, Ui.KindName(d.Kind));
                 Set(_name, d.Name);
-                Set(_level, d.Level.HasValue ? d.Level + "%" : "--");
+                Set(_level, (d.Charging ? "⚡" : "") + (d.Level.HasValue ? d.Level + "%" : "--"));
                 _level.ForeColor = Ui.TextColor(d.Level, d.Charging, d.Online);
-                if (_shownLevel != d.Level || !_barSet) { Ui.SetBar(_bar, d.Level); _shownLevel = d.Level; _barSet = true; }
+                _bar.SetLevel(d.Level, Ui.TextColor(d.Level, d.Charging, d.Online));
                 if (_tray.Checked != shownInTray) _tray.Checked = shownInTray;
                 RefreshAge();
             }
@@ -294,7 +293,7 @@ namespace BatteryViewer
         {
             if (_d == null) return;
             var bits = new List<string> { _d.PluginName };
-            if (_d.Charging) bits.Add("充电中");
+            if (_d.Charging && _d.Detail != "已充满") bits.Add("充电中");
             if (!_d.Online) bits.Add("离线");
             if (_d.Detail.Length > 0) bits.Add(_d.Detail);
             bits.Add(_d.Updated > 0 ? Ago(_d.Updated) + "更新" : "从未读到电量");
@@ -315,6 +314,54 @@ namespace BatteryViewer
         {
             base.OnPaint(e);
             using (var pen = new Pen(Ui.Line)) e.Graphics.DrawRectangle(pen, 0, 0, Width - 1, Height - 1);
+        }
+    }
+
+    /// <summary>
+    /// 电量条: 扁平的圆角条, 颜色跟电量文字一致(充电蓝 / 绿 / 黄 / 红 / 离线灰)。
+    /// 不用系统进度条, 因为它绿色状态下会一直闪一道流光, 看起来像在充电。
+    /// </summary>
+    internal class LevelBar : Control
+    {
+        private int? _level;
+        private Color _color;
+
+        public LevelBar()
+        {
+            SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.UserPaint | ControlStyles.ResizeRedraw, true);
+            BackColor = Ui.Card;
+        }
+
+        public void SetLevel(int? level, Color color)
+        {
+            if (_level == level && _color == color) return;
+            _level = level;
+            _color = color;
+            Invalidate();
+        }
+
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            var g = e.Graphics;
+            g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+            float h = Math.Min(Height, Ui.S(6)), y = (Height - h) / 2;
+            using (var track = new SolidBrush(Color.FromArgb(229, 229, 229)))
+                FillPill(g, track, new RectangleF(0, y, Width - 1, h));
+            if (_level.HasValue && _level > 0)
+                using (var fill = new SolidBrush(_color))
+                    FillPill(g, fill, new RectangleF(0, y, Math.Max(h, (Width - 1) * _level.Value / 100f), h));
+        }
+
+        private static void FillPill(Graphics g, Brush b, RectangleF r)
+        {
+            using (var p = new System.Drawing.Drawing2D.GraphicsPath())
+            {
+                float d = r.Height;
+                p.AddArc(r.X, r.Y, d, d, 90, 180);
+                p.AddArc(r.Right - d, r.Y, d, d, 270, 180);
+                p.CloseFigure();
+                g.FillPath(b, p);
+            }
         }
     }
 }

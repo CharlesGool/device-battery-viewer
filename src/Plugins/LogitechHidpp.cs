@@ -248,17 +248,19 @@ namespace BatteryViewer.Plugins
                     if (caps != null && (caps[1] & 0x02) == 0)
                         // 设备不支持百分比, 只有 满/好/低/危急 四档
                         soc = (bits & 8) != 0 ? 100 : (bits & 4) != 0 ? 50 : (bits & 2) != 0 ? 20 : 5;
+                    // 充电状态: 0 放电 / 1 充电 / 2 慢充 / 3 已充满(仍接着电源) / 4 充电异常
                     level = soc;
-                    charging = status == 1 || status == 2;
-                    detail = status == 3 ? "已充满" : status == 4 ? "充电异常" : "HID++ 0x1004";
+                    charging = status >= 1 && status <= 3;
+                    detail = status == 2 ? "慢速充电" : status == 3 ? "已充满" : status == 4 ? "充电异常" : "";
                     return;
                 }
                 r = Call(FBatteryStatus, 0);
                 if (r != null)
                 {
                     level = r[0] > 0 ? (int?)r[0] : null;
-                    charging = r[2] == 1 || r[2] == 2 || r[2] == 4;
-                    detail = r[2] == 3 ? "已充满" : r[2] == 5 ? "电池异常" : r[2] == 6 ? "温度异常" : "HID++ 0x1000";
+                    // 状态: 0 放电 / 1 充电 / 2 快充满 / 3 已充满 / 4 慢充 / 5 电池异常 / 6 温度异常
+                    charging = r[2] >= 1 && r[2] <= 4;
+                    detail = r[2] == 3 ? "已充满" : r[2] == 4 ? "慢速充电" : r[2] == 5 ? "电池异常" : r[2] == 6 ? "温度异常" : "";
                     return;
                 }
                 r = Call(FBatteryVoltage, 0);

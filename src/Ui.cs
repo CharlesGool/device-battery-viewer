@@ -58,17 +58,6 @@ namespace BatteryViewer
             return level >= 60 ? Green : level >= 30 ? Color.FromArgb(157, 93, 0) : Red;
         }
 
-        /// <summary>设置原生进度条的值和状态色(1 绿 / 2 红 / 3 黄), 跳过系统的填充动画。</summary>
-        public static void SetBar(ProgressBar bar, int? level)
-        {
-            int v = level ?? 0;
-            int state = !level.HasValue || level >= 60 ? 1 : level >= 30 ? 3 : 2;
-            SendMessage(bar.Handle, 0x410, (IntPtr)state, IntPtr.Zero);   // PBM_SETSTATE, 要在设值之前
-            // 进度条往大了设会慢慢动画过去(红/黄状态下还经常画不出来), 先设到 v+1 再退回 v 就是立即显示
-            if (v < 100) { bar.Value = v + 1; bar.Value = v; }
-            else { bar.Value = 100; bar.Value = 99; bar.Value = 100; }
-        }
-
         // ---------------------------------------------------------------- 图标
         public static int TrayIconSize { get { return SystemInformation.SmallIconSize.Width; } }
 
@@ -149,6 +138,5 @@ namespace BatteryViewer
         }
 
         [DllImport("user32.dll")] private static extern bool DestroyIcon(IntPtr h);
-        [DllImport("user32.dll")] private static extern IntPtr SendMessage(IntPtr h, int msg, IntPtr w, IntPtr l);
     }
 }
