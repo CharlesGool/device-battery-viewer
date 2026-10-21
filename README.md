@@ -11,7 +11,12 @@ Windows 通知区域显示无线设备电量: 每台设备一个托盘图标, �
 |---|---|---|
 | 罗技 HID++(内置) | 罗技 G502 X LIGHTSPEED(已真机验证), 以及 LIGHTSPEED / Unifying / Bolt 接收器上或有线直连的 HID++ 2.0 设备 | HID++ 2.0, 特性 `0x1004` 统一电池 → `0x1000` 电池状态 → `0x1001` 电压, 和 Linux 内核 `hid-logitech-hidpp`、Solaar 同一套协议 |
 | 蓝牙(内置) | Windows 设置里能看到电量的蓝牙设备(耳机、手柄、BLE 鼠标键盘等) | 读系统写在设备节点上的 PnP 属性 `{104EA319-6EE2-4701-BD47-8DDBF425BBE5} 2`(未真机验证) |
+| [vxe_mouse.cs](plugins/vxe_mouse.cs)(可选) | ATK / VXE 2.4G 无线鼠标(接收器 `373B:1216`) | 厂商私有 HID 命令(未真机验证) |
+| [darkrim_headset.cs](plugins/darkrim_headset.cs)(可选) | DARKRIM SHADOW 2.4G 耳机(杰理方案接收器, VID `3654`) | 杰理私有协议, TLV + CRC16(未真机验证) |
 | 自定义插件 | 你写的 | 见下文 |
+
+可选插件在仓库的 [plugins/](plugins) 目录, 不编进 exe: 下载对应的 `.cs` 文件, 在「插件管理」里「添加插件文件…」选它即可。
+两个可选插件的协议来自 [2.4G-battery-viewer](https://github.com/yszyszysz233/2.4G-battery-viewer) 公开的说明, 代码是按说明重写的。
 
 ## 使用
 
