@@ -46,16 +46,16 @@ namespace BatteryViewer
         public static Color TrayColor(int? level, bool charging, bool online)
         {
             if (!online || !level.HasValue) return Color.FromArgb(158, 158, 158);
-            if (charging) return Color.FromArgb(79, 195, 247);
-            return level >= 60 ? Color.FromArgb(76, 217, 100) : level >= 30 ? Color.FromArgb(255, 193, 7) : Color.FromArgb(244, 67, 54);
+            if (charging) return Color.FromArgb(76, 217, 100);
+            return level >= 30 ? Color.FromArgb(79, 195, 247) : level >= 15 ? Color.FromArgb(255, 193, 7) : Color.FromArgb(244, 67, 54);
         }
 
         /// <summary>窗口里白底上的文字颜色。</summary>
         public static Color TextColor(int? level, bool charging, bool online)
         {
             if (!online || !level.HasValue) return Color.FromArgb(128, 128, 128);
-            if (charging) return Color.FromArgb(0, 103, 192);
-            return level >= 60 ? Green : level >= 30 ? Color.FromArgb(157, 93, 0) : Red;
+            if (charging) return Green;
+            return level >= 30 ? Color.FromArgb(0, 103, 192) : level >= 15 ? Color.FromArgb(157, 93, 0) : Red;
         }
 
         // ---------------------------------------------------------------- 图标

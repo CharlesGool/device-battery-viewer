@@ -15,6 +15,10 @@ Windows 通知区域显示无线设备电量: 每台设备一个托盘图标, �
 
 ## 使用
 
+1. 从 [Releases](../../releases) 下载 `DeviceBatteryViewer.exe`, 或按下文自行编译
+2. 双击运行, 面板会出现在屏幕右下角, 程序常驻托盘
+3. 需要开机自启的话勾选「开机自启」, 或者用 `--install` 装到固定位置
+
 ```bash
 DeviceBatteryViewer.exe              # 打开面板, 常驻托盘
 DeviceBatteryViewer.exe --install    # 复制到 %LOCALAPPDATA%\Programs\DeviceBatteryViewer 并开机自启
@@ -23,11 +27,9 @@ DeviceBatteryViewer.exe --once       # 读一次电量, 打印后退出
 DeviceBatteryViewer.exe --hid        # 列出本机所有 HID 接口(写插件时找 VID / PID / usage page)
 ```
 
-仓库在 NAS 上, 常驻运行请用 `--install` 装到本机, 不要从 NAS 路径开机自启。
-
 - **托盘**: 左键打开面板; 右键菜单有各设备电量、立即刷新、插件管理、开机自启、退出。
-- **图标颜色**: 绿 ≥60%, 黄 30-59%, 红 <30%, 蓝 = 充电中(底部带横线), 灰 = 离线(显示上次读到的电量)。
-- **面板**: 每台设备一行(原生进度条), 可以单独关掉某台设备的托盘图标, 改刷新间隔(30 秒 - 30 分钟)。
+- **颜色**: 充电中(包括充满后还插着线)绿色并带 ⚡ / 托盘图标底部带横线; 用电池时蓝色, 低于 30% 黄色, 低于 15% 红色; 离线灰色(显示上次读到的电量)。
+- **面板**: 每台设备一行, 可以单独关掉某台设备的托盘图标, 改刷新间隔(30 秒 - 30 分钟)。
 - **离线设备**: 无线鼠标休眠后接收器不再转发请求, 这时保留上次读到的电量并标为离线。读到过的设备记在 `%APPDATA%\DeviceBatteryViewer\devices.json`, 重启后也能显示。
 
 ## 管理插件
