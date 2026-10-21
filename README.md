@@ -96,7 +96,7 @@ public class MyMouse : BatteryPlugin
 build.cmd
 ```
 
-用 Windows 自带的 `csc.exe`(.NET Framework 4.x)编译, 输出 `bin\DeviceBatteryViewer.exe`。在 NAS 路径下 cmd 跑不了时, 用 Git Bash 运行 `sh build.sh`。
+用 Windows 自带的 `csc.exe`(.NET Framework 4.x)编译, 输出 `bin\DeviceBatteryViewer.exe`。仓库在网络共享路径下 cmd 跑不了时, 用 Git Bash 运行 `sh build.sh`。
 
 ## 目录
 
