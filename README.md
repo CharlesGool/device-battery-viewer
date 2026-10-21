@@ -118,3 +118,7 @@ build.cmd
 ## 隐私
 
 不联网, 不写日志。只在 `%APPDATA%\DeviceBatteryViewer\` 下存配置、插件和上次读到的电量。
+
+## 许可证
+
+[MIT](LICENSE)
